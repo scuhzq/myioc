@@ -4,7 +4,6 @@ import com.hzq.annotation.MyAutowired;
 import com.hzq.annotation.MyController;
 import com.hzq.annotation.MyRequestMapping;
 import com.hzq.annotation.MyService;
-import sun.net.www.protocol.jar.URLJarFile;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -14,7 +13,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -31,23 +29,22 @@ public class MyDispatcherServlet extends HttpServlet {
     private Map<String, Object> ioc = new HashMap<>();
     private Map<String, Method> handlerMapping = new HashMap<>();
 
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPost(req, resp);
+        this.doPost(req, resp);
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp){
         //6.dispatcher
         try {
-            doDipatch(req, resp);
+            doDispatch(req, resp);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void doDipatch(HttpServletRequest req, HttpServletResponse resp) throws Exception{
+    private void doDispatch(HttpServletRequest req, HttpServletResponse resp) throws Exception{
         String url = req.getRequestURI();
         String contextPath = req.getContextPath();
         System.out.println("uri:" + url + ", contextPath:" + contextPath);
@@ -68,11 +65,11 @@ public class MyDispatcherServlet extends HttpServlet {
             } else if (paramType == HttpServletResponse.class){
                 paramValues[i] = resp;
             } else if(paramType == String.class){
-                paramValues[i] = params.get(0)[0];
+                paramValues[i] = params.get("userId")[0];
             }
         }
 
-        String beanName = lowerFirstCase(method.getDeclaringClass().getName());
+        String beanName = lowerFirstCase(method.getDeclaringClass().getSimpleName());
         method.invoke(ioc.get(beanName), paramValues);
     }
 
@@ -114,7 +111,7 @@ public class MyDispatcherServlet extends HttpServlet {
                 String url = baseUrl + "/" + myRequestMapping.value();
                 url = url.replaceAll("/+", "/");
                 handlerMapping.put(url, m);
-                System.out.println("mapped url:" + url + "method:" + m);
+                System.out.println("mapped url:" + url + ", method:" + m);
             }
         }
     }
@@ -142,6 +139,7 @@ public class MyDispatcherServlet extends HttpServlet {
     private void doInstanceIoc(){
         try {
             for (String className : classNames){
+                System.out.println("className:" + className);
                 Class clazz = Class.forName(className);
                 if (clazz.isAnnotationPresent(MyController.class)){
                     String beanName = lowerFirstCase(clazz.getSimpleName());
@@ -171,8 +169,9 @@ public class MyDispatcherServlet extends HttpServlet {
         for (File f : file.listFiles()){
             if(f.isDirectory()){
                 doScannerPackage(packagePath + "." + f.getName());
+            } else {
+                classNames.add(packagePath + "." + f.getName().replaceAll(".class", "").trim());
             }
-            classNames.add(packagePath + "." + f.getName().replaceAll(".class", "").trim());
         }
     }
 

@@ -11,11 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 @MyRequestMapping("/test")
 public class TestController {
 
-    public void query(HttpServletRequest request, HttpServletResponse response,
+    @MyRequestMapping("/query")
+    public void query(HttpServletRequest req, HttpServletResponse resp,
                       @MyRequestParam("userId") String userId){
 
+        System.out.println("query,   ....   " + "query");
         try {
-            response.getWriter().write(userId + ", welcome to TestController.query");
+            resp.getWriter().write(userId + ", welcome to TestController.query");
         } catch (Throwable t){
             t.printStackTrace();
         }
